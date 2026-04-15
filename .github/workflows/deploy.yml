@@ -1,20 +1,25 @@
-name: Deploy to Kubernetes
+name: Build and Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
 
 jobs:
-  deploy:
+  build:
     runs-on: self-hosted
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v3
 
-    - name: Verify cluster
-      run: kubectl get nodes
-
-    - name: Deploy to Kubernetes
+    - name: Build Docker image
       run: |
-        kubectl apply -f k8s/
+        docker build -t 192.168.56.30:5000/myapp:latest .
+
+    - name: Push image
+      run: |
+        docker push 192.168.56.30:5000/myapp:latest
+
+    - name: Deploy to K8s
+      run: |
+        kubectl set image deployment/myapp myapp=192.168.56.30:5000/myapp:latest
